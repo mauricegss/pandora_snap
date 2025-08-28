@@ -1,4 +1,4 @@
-# utfpr_snap
+# pandora_snap
 
 A new Flutter project.
 

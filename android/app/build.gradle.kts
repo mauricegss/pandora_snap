@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.gmail.mauricegma.utfpr_snap"
+    namespace = "com.gmail.mauricegma.pandora_snap"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.gmail.mauricegma.utfpr_snap"
+        applicationId = "com.gmail.mauricegma.pandora_snap"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

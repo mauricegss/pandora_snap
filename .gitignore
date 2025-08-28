@@ -36,6 +36,7 @@ lib/generated_plugin_registrant.dart
 
 # Pasta de compilação principal do Flutter. Contém o seu .apk, .ipa, etc.
 /build/
+/android/build/
 
 # Pasta de relatórios de cobertura de testes.
 /coverage/
