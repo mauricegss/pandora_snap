@@ -1,0 +1,52 @@
+# Ficheiros e pastas genéricos de vários sistemas e editores.
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Ficheiros de configuração do IntelliJ e Android Studio.
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# A pasta .vscode pode conter configurações úteis do projeto.
+# Deixe comentado se quiser partilhar as configurações de launch e tasks.
+#.vscode/
+
+# Ficheiros gerados e cache do Flutter, Dart e Pub. Essencial ignorar.
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# Ficheiro gerado para projetos Web.
+lib/generated_plugin_registrant.dart
+
+# Pasta de compilação principal do Flutter. Contém o seu .apk, .ipa, etc.
+/build/
+
+# Pasta de relatórios de cobertura de testes.
+/coverage/
+
+# Ficheiros de simbolização para análise de crashes (gerados na compilação).
+app.*.symbols
+
+# Ficheiros de mapeamento para ofuscação de código (gerados na compilação).
+app.*.map.json
+
+# Pastas de compilação específicas do Android Studio.
+/android/app/debug
+/android/app/profile
+/android/app/release
