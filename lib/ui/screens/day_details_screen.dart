@@ -4,7 +4,7 @@ import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/domain/models/user_model.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
-import 'package:pandora_snap/ui/screens/fullscreen_image_screen.dart';
+import 'package:pandora_snap/ui/widgets/photo_grid_widget.dart';
 
 class DayDetailsScreen extends StatefulWidget {
   final DateTime date;
@@ -35,41 +35,7 @@ class _DayDetailsScreenState extends State<DayDetailsScreen> {
         title: Text('Fotos de $formattedDate'),
         centerTitle: true,
       ),
-      body: photoList.isEmpty
-          ? const Center(
-              child: Text('Nenhuma foto encontrada para este dia.'),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount: photoList.length,
-              itemBuilder: (context, index) {
-                final photo = photoList[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FullscreenImageScreen(imageUrl: photo.url),
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: Image.network(
-                      photo.url,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.error, color: Colors.red),
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: PhotoGridView(photoList: photoList),
     );
   }
 }

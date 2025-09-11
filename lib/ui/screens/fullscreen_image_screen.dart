@@ -1,6 +1,5 @@
-// Caminho: lib/ui/screens/fullscreen_image_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class FullscreenImageScreen extends StatelessWidget {
   final String imageUrl;
@@ -29,7 +28,7 @@ class FullscreenImageScreen extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 30),
               onPressed: () {
-                Navigator.pop(context);
+                context.pop();
               },
             ),
           ),

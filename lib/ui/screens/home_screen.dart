@@ -4,12 +4,21 @@ import 'package:pandora_snap/domain/models/user_model.dart';
 import 'package:pandora_snap/domain/repositories/dog_repository.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
-import 'package:pandora_snap/ui/screens/dog_details_screen.dart';
-import 'package:pandora_snap/ui/screens/welcome_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pandora_snap/configs/routes.dart';
 import 'package:pandora_snap/ui/widgets/calendar_widget.dart';
+import 'package:pandora_snap/ui/widgets/dog_card_widget.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+
+  final DogRepository dogRepository;
+  final PhotoRepository photoRepository;
+
+  const HomeScreen({
+    super.key,
+    required this.dogRepository,
+    required this.photoRepository,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -18,7 +27,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final List<Dog> dogCollection;
-  final photoRepository = PhotoRepository();
   User? currentUser;
 
   @override
@@ -27,12 +35,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _tabController = TabController(length: 2, vsync: this);
     currentUser = UserRepository().currentUser;
     
-    List<Dog> unsortedDogs = DogRepository().getDogs();
+    List<Dog> unsortedDogs = widget.dogRepository.getDogs();
 
     unsortedDogs.sort((a, b) {
-      final photoCountA = photoRepository.getPhotosForDog(a.name, currentUser).length;
-      final photoCountB = photoRepository.getPhotosForDog(b.name, currentUser).length;
-
+      final photoCountA = widget.photoRepository.getPhotosForDog(a.name, currentUser).length;
+      final photoCountB = widget.photoRepository.getPhotosForDog(b.name, currentUser).length;
       final countCompare = photoCountB.compareTo(photoCountA);
       if (countCompare != 0) return countCompare;
       return a.name.compareTo(b.name);
@@ -57,10 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () {
             UserRepository().logout();
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-            );
+            context.pushNamed(AppRoutes.auth.name);
           },
         ),
         bottom: TabBar(
@@ -98,56 +102,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       itemCount: dogCollection.length,
       itemBuilder: (context, index) {
         final dog = dogCollection[index];
-        
-        // A LÓGICA CORRETA ACONTECE AQUI:
-        // 1. Verifica se o utilizador tem fotos deste cão.
-        final bool isCaptured = photoRepository.getPhotosForDog(dog.name, currentUser).isNotEmpty;
-        
-        // 2. Pega a foto de capa (que será a imagem 'noImage' se não for capturado).
-        final coverPhotoUrl = photoRepository.getLatestCoverPhotoForDog(dog.name, currentUser);
 
-        return Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            // 3. Só permite clicar se o cão tiver sido "capturado".
-            onTap: () {
-              if (isCaptured) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DogDetailsScreen(dog: dog),
-                  ),
-                );
-              }
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Image.network(
-                    coverPhotoUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.error, color: Colors.red),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    // 4. Mostra o nome do cão, mas com uma opacidade menor se não for capturado.
-                    dog.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isCaptured ? null : Colors.white.withOpacity(0.6),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        final bool isCaptured = widget.photoRepository.getPhotosForDog(dog.name, currentUser).isNotEmpty;
+        final coverPhotoUrl = widget.photoRepository.getLatestCoverPhotoForDog(dog.name, currentUser);
+
+        return DogCard(
+          dog: dog,
+          isCaptured: isCaptured,
+          coverPhotoUrl: coverPhotoUrl,
         );
       },
     );

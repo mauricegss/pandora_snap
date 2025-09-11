@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:pandora_snap/domain/models/user_model.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
-import 'package:pandora_snap/ui/screens/day_details_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pandora_snap/configs/routes.dart';
 
 class CalendarWidget extends StatefulWidget {
   const CalendarWidget({super.key});
@@ -91,12 +92,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               return InkWell(
                 onTap: () {
                   if (temFoto) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DayDetailsScreen(date: dataAtual),
-                      ),
-                    );
+                    context.pushNamed(AppRoutes.dayDetails.name, extra: dataAtual);
                   }
                 },
                 child: Container(

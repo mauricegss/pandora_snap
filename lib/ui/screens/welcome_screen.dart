@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:pandora_snap/ui/screens/login_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pandora_snap/configs/routes.dart';
+import 'package:pandora_snap/utils/url_launcher.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
-  Future<void> _launchPandoraURL() async {
-    final Uri url = Uri.parse('https://www.instagram.com/projeto_pandora_utfpr_pg/');
-    
-    if (!await launchUrl(url)) {
-      throw Exception('Não foi possível abrir $url');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +12,6 @@ class WelcomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Bem-Vindo!'),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () {
-          },
-        ),
       ),
       body: ListView(
         children: [
@@ -41,10 +29,7 @@ class WelcomeScreen extends StatelessWidget {
                     textStyle: const TextStyle(fontSize: 18),
                   ),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
+                    context.pushNamed(AppRoutes.auth.name);
                   },
                   child: const Text('Entrar'),
                 ),
@@ -52,7 +37,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 TextButton(
-                  onPressed: _launchPandoraURL,
+                  onPressed: launchPandoraInstagram,
                   child: const Text(
                     "Siga o Projeto Pandora",
                     style: TextStyle(
