@@ -6,26 +6,23 @@ import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/configs/routes.dart';
+import 'package:provider/provider.dart';
 
-class CalendarWidget extends StatefulWidget {
-  const CalendarWidget({super.key});
+class CalendarScreen extends StatefulWidget {
+  const CalendarScreen({super.key});
 
   @override
-  State<CalendarWidget> createState() => _CalendarWidgetState();
+  State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarWidgetState extends State<CalendarWidget> {
+class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _dataExibida;
-  late Set<DateTime> _datasComFotos;
-  User? currentUser;
 
   @override
   void initState() {
     super.initState();
     _dataExibida = DateTime.now();
     initializeDateFormatting('pt_BR');
-    currentUser = UserRepository().currentUser;
-    _datasComFotos = PhotoRepository().getDatesWithPhotos(currentUser);
   }
 
   void _mesAnterior() {
@@ -42,6 +39,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final User? currentUser = context.watch<UserRepository>().currentUser;
+    final Set<DateTime> datasComFotos = PhotoRepository().getDatesWithPhotos(currentUser);
+
     final diasNoMes = DateUtils.getDaysInMonth(_dataExibida.year, _dataExibida.month);
     final primeiroDiaDoMes = DateTime(_dataExibida.year, _dataExibida.month, 1);
     final diaDaSemanaInicio = primeiroDiaDoMes.weekday % 7;
@@ -62,7 +62,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               ),
               Text(
                 DateFormat('MMMM y', 'pt_BR').format(_dataExibida),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               IconButton(
                 icon: const Icon(Icons.arrow_forward_ios_rounded),
@@ -72,13 +73,21 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           ),
           const SizedBox(height: 20),
           Row(
-            children: diasDaSemana.map((dia) => Expanded(child: Center(child: Text(dia, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))))).toList(),
+            children: diasDaSemana
+                .map((dia) => Expanded(
+                    child: Center(
+                        child: Text(dia,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey)))))
+                .toList(),
           ),
           const Divider(),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+            gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
             itemCount: diasNoMes + diaDaSemanaInicio,
             itemBuilder: (context, index) {
               if (index < diaDaSemanaInicio) {
@@ -86,25 +95,31 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               }
 
               final dia = index - diaDaSemanaInicio + 1;
-              final dataAtual = DateTime(_dataExibida.year, _dataExibida.month, dia);
-              final temFoto = _datasComFotos.contains(dataAtual);
+              final dataAtual =
+                  DateTime(_dataExibida.year, _dataExibida.month, dia);
+              final temFoto = datasComFotos.contains(dataAtual);
 
               return InkWell(
                 onTap: () {
                   if (temFoto) {
-                    context.pushNamed(AppRoutes.dayDetails.name, extra: dataAtual);
+                    context.pushNamed(AppRoutes.dayDetails.name,
+                        extra: dataAtual);
                   }
                 },
                 child: Container(
                   margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    border: Border.all(color: temFoto ? Colors.amber : Colors.grey.shade300),
+                    border: Border.all(
+                        color:
+                            temFoto ? Colors.amber : Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
                       '$dia',
-                      style: TextStyle(fontWeight: temFoto ? FontWeight.bold : FontWeight.normal),
+                      style: TextStyle(
+                          fontWeight:
+                              temFoto ? FontWeight.bold : FontWeight.normal),
                     ),
                   ),
                 ),

@@ -34,6 +34,7 @@ dependencies:
   url_launcher:
   intl:
   go_router:
+  provider:
 
 dev_dependencies:
   flutter_test:

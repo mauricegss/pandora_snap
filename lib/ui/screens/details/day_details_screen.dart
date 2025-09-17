@@ -5,6 +5,7 @@ import 'package:pandora_snap/domain/models/user_model.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/ui/widgets/photo_grid_widget.dart';
+import 'package:provider/provider.dart';
 
 class DayDetailsScreen extends StatefulWidget {
   final DateTime date;
@@ -16,18 +17,13 @@ class DayDetailsScreen extends StatefulWidget {
 }
 
 class _DayDetailsScreenState extends State<DayDetailsScreen> {
-  late final List<Photo> photoList;
-  User? currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    currentUser = UserRepository().currentUser;
-    photoList = PhotoRepository().getPhotosForDate(widget.date, currentUser);
-  }
-
   @override
   Widget build(BuildContext context) {
+
+    final User? currentUser = context.watch<UserRepository>().currentUser;
+    final List<Photo> photoList =
+        PhotoRepository().getPhotosForDate(widget.date, currentUser);
+
     final formattedDate = DateFormat('dd/MM/yyyy', 'pt_BR').format(widget.date);
 
     return Scaffold(

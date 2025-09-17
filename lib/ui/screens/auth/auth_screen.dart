@@ -2,28 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/configs/routes.dart';
+import 'package:provider/provider.dart';
 
 class AuthScreen extends StatefulWidget {
 
-  final UserRepository userRepository;
-  const AuthScreen({
-    super.key,
-    required this.userRepository,
-  });
+  const AuthScreen({super.key});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // --- CONTROLADORES ---
   final PageController _pageController = PageController();
-
-  // Controladores para os campos de Login
   final _loginUsernameController = TextEditingController();
   final _loginPasswordController = TextEditingController();
-
-  // Controladores para os campos de Registro
   final _registerUsernameController = TextEditingController();
   final _registerPasswordController = TextEditingController();
 
@@ -37,12 +29,11 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // --- LÓGICA DE NEGÓCIO (Movida do login_screen.dart) ---
   void _login() {
     final username = _loginUsernameController.text;
     final password = _loginPasswordController.text;
 
-    final user = widget.userRepository.login(username, password);
+    final user = context.read<UserRepository>().login(username, password);
 
     if (user != null) {
       context.goNamed(AppRoutes.home.name);
@@ -56,7 +47,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  // --- LÓGICA DE NEGÓCIO (Movida do register_screen.dart) ---
   void _register() {
     final username = _registerUsernameController.text;
     final password = _registerPasswordController.text;
@@ -70,17 +60,17 @@ class _AuthScreenState extends State<AuthScreen> {
       );
       return;
     }
-
-    final success = widget.userRepository.register(username, password);
+    
+    final success = context.read<UserRepository>().register(username, password);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Conta criada com sucesso! Faça o login para continuar.'),
+          content:
+              Text('Conta criada com sucesso! Faça o login para continuar.'),
           backgroundColor: Colors.green,
         ),
       );
-      // Após o sucesso, leva o usuário de volta para a tela de login
       _showLoginPage();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,21 +82,20 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  // --- CONTROLE DE NAVEGAÇÃO INTERNA ---
   void _showRegisterPage() {
-    _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    _pageController.animateToPage(1,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
   }
 
   void _showLoginPage() {
-    _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+    _pageController.animateToPage(0,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
   }
 
-  // --- UI (BUILD) ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // O botão de voltar padrão do GoRouter cuidará da navegação
         title: const Text('Bem-vindo'),
         centerTitle: true,
       ),
@@ -121,8 +110,6 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  // --- WIDGETS DAS PÁGINAS ---
-
   Widget _buildLoginView() {
     return Center(
       child: SingleChildScrollView(
@@ -131,21 +118,31 @@ class _AuthScreenState extends State<AuthScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text("Entrar", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            const Text("Entrar",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
             const SizedBox(height: 30),
             TextField(
               controller: _loginUsernameController,
-              decoration: const InputDecoration(labelText: 'Usuário', border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(100)))),
+              decoration: const InputDecoration(
+                  labelText: 'Usuário',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(100)))),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _loginPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(100)))),
+              decoration: const InputDecoration(
+                  labelText: 'Senha',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(100)))),
             ),
             const SizedBox(height: 20),
             OutlinedButton(onPressed: _login, child: const Text('Confirmar')),
-            TextButton(onPressed: _showRegisterPage, child: const Text('Criar uma Conta')),
+            TextButton(
+                onPressed: _showRegisterPage,
+                child: const Text('Criar uma Conta')),
           ],
         ),
       ),
@@ -160,21 +157,32 @@ class _AuthScreenState extends State<AuthScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text("Registrar", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            const Text("Registar",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
             const SizedBox(height: 30),
             TextField(
               controller: _registerUsernameController,
-              decoration: const InputDecoration(labelText: 'Usuário', border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(100)))),
+              decoration: const InputDecoration(
+                  labelText: 'Usuário',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(100)))),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _registerPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(100)))),
+              decoration: const InputDecoration(
+                  labelText: 'Senha',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(100)))),
             ),
             const SizedBox(height: 20),
-            OutlinedButton(onPressed: _register, child: const Text('Confirmar')),
-            TextButton(onPressed: _showLoginPage, child: const Text('Já tenho uma conta')),
+            OutlinedButton(
+                onPressed: _register, child: const Text('Confirmar')),
+            TextButton(
+                onPressed: _showLoginPage,
+                child: const Text('Já tenho uma conta')),
           ],
         ),
       ),

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
-import 'package:pandora_snap/domain/repositories/dog_repository.dart';
-import 'package:pandora_snap/domain/repositories/photo_repository.dart';
-import 'package:pandora_snap/domain/repositories/user_repository.dart';
-import 'package:pandora_snap/ui/screens/auth_screen.dart';
-import 'package:pandora_snap/ui/screens/day_details_screen.dart';
-import 'package:pandora_snap/ui/screens/dog_details_screen.dart';
-import 'package:pandora_snap/ui/screens/fullscreen_image_screen.dart';
-import 'package:pandora_snap/ui/screens/home_screen.dart';
-import 'package:pandora_snap/ui/screens/welcome_screen.dart';
+import 'package:pandora_snap/ui/screens/auth/auth_screen.dart';
+import 'package:pandora_snap/ui/screens/details/day_details_screen.dart';
+import 'package:pandora_snap/ui/screens/details/dog_details_screen.dart';
+import 'package:pandora_snap/ui/screens/details/fullscreen_image_screen.dart';
+import 'package:pandora_snap/ui/screens/home/home_screen.dart';
+import 'package:pandora_snap/ui/screens/auth/welcome_screen.dart';
 
 enum AppRoutes {
   welcome,
@@ -21,9 +18,6 @@ enum AppRoutes {
 }
 
 class AppRouter {
-  static final UserRepository _userRepository = UserRepository();
-  static final DogRepository _dogRepository = DogRepository();
-  static final PhotoRepository _photoRepository = PhotoRepository();
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -35,18 +29,13 @@ class AppRouter {
       GoRoute(
         path: '/auth',
         name: AppRoutes.auth.name,
-        builder: (context, state) {
-          return AuthScreen(userRepository: _userRepository);
-        },
+        builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
         path: '/home',
         name: AppRoutes.home.name,
         builder: (context, state) {
-          return HomeScreen(
-            dogRepository: _dogRepository,
-            photoRepository: _photoRepository,
-          );
+          return const HomeScreen();
         },
         routes: [
           GoRoute(
@@ -76,7 +65,6 @@ class AppRouter {
         },
       ),
     ],
-    // Opcional: Adiciona uma tela de erro para rotas não encontradas
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Página não encontrada')),
       body: Center(

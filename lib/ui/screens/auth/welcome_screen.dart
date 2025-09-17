@@ -16,7 +16,7 @@ class WelcomeScreen extends StatelessWidget {
       body: ListView(
         children: [
           SizedBox(height: 350),
-          // Conteúdo da tela
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(

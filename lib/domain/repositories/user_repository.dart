@@ -1,11 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:pandora_snap/domain/models/user_model.dart';
 
-class UserRepository {
-  static final UserRepository _instance = UserRepository._internal();
-  factory UserRepository() => _instance;
-  UserRepository._internal();
+class UserRepository extends ChangeNotifier {
 
-  User? currentUser;
+  User? _currentUser;
+  User? get currentUser => _currentUser;
 
   final List<User> _users = [
     User(username: 'admin', password: 'admin', isAdmin: true),
@@ -16,16 +15,19 @@ class UserRepository {
       final user = _users.firstWhere(
         (user) => user.username == username && user.password == password,
       );
-      currentUser = user;
+      _currentUser = user;
+      notifyListeners();
       return user;
     } catch (e) {
-      currentUser = null;
+      _currentUser = null;
+      notifyListeners();
       return null;
     }
   }
 
   void logout() {
-    currentUser = null;
+    _currentUser = null;
+    notifyListeners();
   }
 
   bool register(String username, String password) {

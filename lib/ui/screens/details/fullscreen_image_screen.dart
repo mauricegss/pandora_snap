@@ -12,7 +12,6 @@ class FullscreenImageScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // O widget InteractiveViewer permite dar zoom e mover a imagem
           Center(
             child: InteractiveViewer(
               panEnabled: true,
@@ -21,7 +20,6 @@ class FullscreenImageScreen extends StatelessWidget {
               child: Image.network(imageUrl),
             ),
           ),
-          // Botão de fechar no canto superior direito
           Positioned(
             top: 40,
             right: 20,
