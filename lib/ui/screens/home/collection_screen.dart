@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
-import 'package:pandora_snap/domain/models/user_model.dart';
+import 'package:pandora_snap/domain/models/photo_model.dart';
+import 'package:pandora_snap/domain/models/user_model.dart' as model;
 import 'package:pandora_snap/domain/repositories/dog_repository.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
@@ -12,53 +13,63 @@ class CollectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final User? currentUser = context.watch<UserRepository>().currentUser;
+    final model.User? currentUser = context.watch<UserRepository>().currentUser;
     final dogRepository = DogRepository();
     final photoRepository = PhotoRepository();
 
-    final List<Dog> dogCollection =
-        _getSortedDogs(currentUser, dogRepository, photoRepository);
+    return FutureBuilder<List<Dog>>(
+      future: dogRepository.getDogs(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Não foi possível carregar os cães.'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Nenhum cão encontrado.'));
+        }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16.0,
-        mainAxisSpacing: 16.0,
-        childAspectRatio: 0.95,
-      ),
-      itemCount: dogCollection.length,
-      itemBuilder: (context, index) {
-        final dog = dogCollection[index];
+        final dogCollection = snapshot.data!;
 
-        final bool isCaptured =
-            photoRepository.getPhotosForDog(dog.name, currentUser).isNotEmpty;
-        final coverPhotoUrl =
-            photoRepository.getLatestCoverPhotoForDog(dog.name, currentUser);
+        return GridView.builder(
+          padding: const EdgeInsets.all(16.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16.0,
+            mainAxisSpacing: 16.0,
+            childAspectRatio: 0.95,
+          ),
+          itemCount: dogCollection.length,
+          itemBuilder: (context, index) {
+            final dog = dogCollection[index];
 
-        return DogCard(
-          dog: dog,
-          isCaptured: isCaptured,
-          coverPhotoUrl: coverPhotoUrl,
+            return FutureBuilder<String>(
+              future: photoRepository.getLatestCoverPhotoForDog(dog.id, currentUser),
+              builder: (context, coverPhotoSnapshot) {
+                if (coverPhotoSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Card(child: Center(child: CircularProgressIndicator()));
+                }
+
+                final coverPhotoUrl = coverPhotoSnapshot.data ?? 'assets/no_image.png';
+
+                return StreamBuilder<List<Photo>>(
+                  stream: photoRepository.getPhotosForDog(dog.id, currentUser),
+                  builder: (context, photoListSnapshot) {
+                    final isCaptured = photoListSnapshot.hasData && photoListSnapshot.data!.isNotEmpty;
+                    
+                    return DogCard(
+                      dog: dog,
+                      isCaptured: isCaptured,
+                      coverPhotoUrl: coverPhotoUrl,
+                    );
+                  },
+                );
+              },
+            );
+          },
         );
       },
     );
-  }
-
-  List<Dog> _getSortedDogs(User? currentUser, DogRepository dogRepository,
-      PhotoRepository photoRepository) {
-    List<Dog> unsortedDogs = dogRepository.getDogs();
-
-    unsortedDogs.sort((a, b) {
-      final photoCountA =
-          photoRepository.getPhotosForDog(a.name, currentUser).length;
-      final photoCountB =
-          photoRepository.getPhotosForDog(b.name, currentUser).length;
-      final countCompare = photoCountB.compareTo(photoCountA);
-      if (countCompare != 0) return countCompare;
-      return a.name.compareTo(b.name);
-    });
-
-    return unsortedDogs;
   }
 }

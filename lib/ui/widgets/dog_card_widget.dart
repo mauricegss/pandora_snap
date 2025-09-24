@@ -17,6 +17,22 @@ class DogCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    Widget imageWidget;
+    if (coverPhotoUrl.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        coverPhotoUrl,
+        fit: BoxFit.cover,
+      );
+    } else {
+      imageWidget = Image.network(
+        coverPhotoUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.error, color: Colors.red),
+      );
+    }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -24,7 +40,6 @@ class DogCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (isCaptured) {
-            // A navegação agora pertence ao card
             context.pushNamed(AppRoutes.dogDetails.name, extra: dog);
           }
         },
@@ -32,12 +47,7 @@ class DogCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: Image.network(
-                coverPhotoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.error, color: Colors.red),
-              ),
+              child: imageWidget,
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -46,7 +56,6 @@ class DogCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  // A opacidade é controlada pela cor do texto
                   color: isCaptured ? Theme.of(context).textTheme.bodyLarge?.color : Colors.grey.shade600,
                 ),
               ),

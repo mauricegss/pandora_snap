@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:pandora_snap/domain/models/user_model.dart';
+import 'package:pandora_snap/domain/models/user_model.dart' as model;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserRepository extends ChangeNotifier {
+  final GoTrueClient _auth = Supabase.instance.client.auth;
+  model.User? _currentUser;
 
-  User? _currentUser;
-  User? get currentUser => _currentUser;
+  model.User? get currentUser => _currentUser;
 
-  final List<User> _users = [
-    User(username: 'admin', password: 'admin', isAdmin: true),
-  ];
-
-  User? login(String username, String password) {
+  Future<model.User?> login(String email, String password) async {
     try {
-      final user = _users.firstWhere(
-        (user) => user.username == username && user.password == password,
+      final response = await _auth.signInWithPassword(
+        email: email,
+        password: password,
       );
-      _currentUser = user;
-      notifyListeners();
-      return user;
+      if (response.user != null) {
+        _currentUser = model.User(username: response.user!.email!);
+        notifyListeners();
+        return _currentUser;
+      }
+      return null;
     } catch (e) {
       _currentUser = null;
       notifyListeners();
@@ -25,16 +27,21 @@ class UserRepository extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _auth.signOut();
     _currentUser = null;
     notifyListeners();
   }
 
-  bool register(String username, String password) {
-    if (_users.any((user) => user.username == username)) {
+  Future<bool> register(String email, String password) async {
+    try {
+      await _auth.signUp(
+        email: email,
+        password: password,
+      );
+      return true;
+    } catch (e) {
       return false;
     }
-    _users.add(User(username: username, password: password));
-    return true;
   }
 }

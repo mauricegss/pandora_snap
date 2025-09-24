@@ -35,6 +35,7 @@ dependencies:
   intl:
   go_router:
   provider:
+  supabase_flutter: ^2.10.1
 
 dev_dependencies:
   flutter_test:

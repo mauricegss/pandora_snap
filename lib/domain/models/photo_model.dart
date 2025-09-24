@@ -12,4 +12,14 @@ class Photo {
     required this.date,
     required this.userId,
   });
+
+  factory Photo.fromMap(Map<String, dynamic> map) {
+    return Photo(
+      id: map['id'].toString(),
+      dogName: map['dog_name'] ?? '',
+      url: map['url'],
+      date: DateTime.parse(map['date']),
+      userId: map['user_id'],
+    );
+  }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:pandora_snap/domain/models/user_model.dart';
+import 'package:pandora_snap/domain/models/user_model.dart' as model;
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:go_router/go_router.dart';
@@ -39,8 +39,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User? currentUser = context.watch<UserRepository>().currentUser;
-    final Set<DateTime> datasComFotos = PhotoRepository().getDatesWithPhotos(currentUser);
+    final model.User? currentUser = context.watch<UserRepository>().currentUser;
+    final photoRepository = PhotoRepository();
 
     final diasNoMes = DateUtils.getDaysInMonth(_dataExibida.year, _dataExibida.month);
     final primeiroDiaDoMes = DateTime(_dataExibida.year, _dataExibida.month, 1);
@@ -83,46 +83,58 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 .toList(),
           ),
           const Divider(),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
-            itemCount: diasNoMes + diaDaSemanaInicio,
-            itemBuilder: (context, index) {
-              if (index < diaDaSemanaInicio) {
-                return const SizedBox.shrink();
+          StreamBuilder<Set<DateTime>>(
+            stream: photoRepository.getDatesWithPhotos(currentUser),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Expanded(
+                  child: Center(child: CircularProgressIndicator())
+                );
               }
+              final datasComFotos = snapshot.data!;
 
-              final dia = index - diaDaSemanaInicio + 1;
-              final dataAtual =
-                  DateTime(_dataExibida.year, _dataExibida.month, dia);
-              final temFoto = datasComFotos.contains(dataAtual);
-
-              return InkWell(
-                onTap: () {
-                  if (temFoto) {
-                    context.pushNamed(AppRoutes.dayDetails.name,
-                        extra: dataAtual);
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+                itemCount: diasNoMes + diaDaSemanaInicio,
+                itemBuilder: (context, index) {
+                  if (index < diaDaSemanaInicio) {
+                    return const SizedBox.shrink();
                   }
-                },
-                child: Container(
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color:
-                            temFoto ? Colors.amber : Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$dia',
-                      style: TextStyle(
-                          fontWeight:
-                              temFoto ? FontWeight.bold : FontWeight.normal),
+
+                  final dia = index - diaDaSemanaInicio + 1;
+                  final dataAtual =
+                      DateTime(_dataExibida.year, _dataExibida.month, dia);
+                  final temFoto = datasComFotos.contains(dataAtual);
+
+                  return InkWell(
+                    onTap: () {
+                      if (temFoto) {
+                        context.pushNamed(AppRoutes.dayDetails.name,
+                            extra: dataAtual);
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color:
+                                temFoto ? Colors.amber : Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$dia',
+                          style: TextStyle(
+                              fontWeight:
+                                  temFoto ? FontWeight.bold : FontWeight.normal),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),

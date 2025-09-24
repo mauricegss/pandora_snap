@@ -1,17 +1,15 @@
 import 'package:pandora_snap/domain/models/dog_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DogRepository {
-  
-  final List<Dog> _dogs = [
-    Dog(name: 'Simba'),
-    Dog(name: 'Caramela'),
-    Dog(name: 'Batman'),
-    Dog(name: 'Pitoco'),
-    Dog(name: 'Greta'),
-    Dog(name: 'Princesa'),
-  ];
+  final _supabase = Supabase.instance.client;
 
-  List<Dog> getDogs() {
-    return _dogs;
+  Future<List<Dog>> getDogs() async {
+    try {
+      final response = await _supabase.from('dogs').select().order('name', ascending: true);
+      return response.map((map) => Dog.fromMap(map)).toList();
+    } catch (e) {
+      return [];
+    }
   }
 }
