@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
+import 'package:pandora_snap/domain/models/photo_model.dart';
+import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/ui/screens/auth/auth_screen.dart';
 import 'package:pandora_snap/ui/screens/details/day_details_screen.dart';
 import 'package:pandora_snap/ui/screens/details/dog_details_screen.dart';
@@ -18,8 +20,12 @@ enum AppRoutes {
 }
 
 class AppRouter {
-  static final GoRouter router = GoRouter(
-    initialLocation: '/',
+  final UserRepository userRepository;
+
+  AppRouter(this.userRepository);
+
+  late final GoRouter router = GoRouter(
+    initialLocation: userRepository.currentUser == null ? '/' : '/home',
     routes: [
       GoRoute(
         path: '/',
@@ -60,8 +66,13 @@ class AppRouter {
         path: '/fullscreen-image',
         name: AppRoutes.fullscreenImage.name,
         builder: (context, state) {
-          final imageUrl = state.extra as String;
-          return FullscreenImageScreen(imageUrl: imageUrl);
+          final extra = state.extra as Map<String, dynamic>;
+          final photos = extra['photos'] as List<Photo>;
+          final index = extra['index'] as int;
+          return FullscreenImageScreen(
+            photos: photos,
+            initialIndex: index,
+          );
         },
       ),
     ],

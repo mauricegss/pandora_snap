@@ -53,8 +53,8 @@ class CollectionScreen extends StatelessWidget {
 
                 final coverPhotoUrl = coverPhotoSnapshot.data ?? 'assets/no_image.png';
 
-                return StreamBuilder<List<Photo>>(
-                  stream: photoRepository.getPhotosForDog(dog.id, currentUser),
+                return FutureBuilder<List<Photo>>(
+                  future: photoRepository.getPhotosForDog(dog.id, currentUser),
                   builder: (context, photoListSnapshot) {
                     final isCaptured = photoListSnapshot.hasData && photoListSnapshot.data!.isNotEmpty;
                     

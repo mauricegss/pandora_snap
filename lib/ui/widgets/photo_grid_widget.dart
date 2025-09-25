@@ -28,15 +28,21 @@ class PhotoGridView extends StatelessWidget {
         final photo = photoList[index];
         return GestureDetector(
           onTap: () {
-            context.pushNamed(AppRoutes.fullscreenImage.name, extra: photo.url);
+            context.pushNamed(
+              AppRoutes.fullscreenImage.name,
+              extra: {'photos': photoList, 'index': index},
+            );
           },
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.0),
-            child: Image.network(
-              photo.url,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.error, color: Colors.red),
+          child: Hero(
+            tag: photo.id,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12.0),
+              child: Image.network(
+                photo.url,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.error, color: Colors.red),
+              ),
             ),
           ),
         );

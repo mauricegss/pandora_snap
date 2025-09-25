@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:pandora_snap/domain/models/user_model.dart' as model;
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
@@ -22,7 +21,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     super.initState();
     _dataExibida = DateTime.now();
-    initializeDateFormatting('pt_BR');
   }
 
   void _mesAnterior() {

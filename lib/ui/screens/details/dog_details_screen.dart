@@ -22,8 +22,9 @@ class DogDetailsScreen extends StatelessWidget {
         title: Text(dog.name),
         centerTitle: true,
       ),
-      body: StreamBuilder<List<Photo>>(
-        stream: photoRepository.getPhotosForDog(dog.id, currentUser),
+      
+      body: FutureBuilder<List<Photo>>(
+        future: photoRepository.getPhotosForDog(dog.id, currentUser),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

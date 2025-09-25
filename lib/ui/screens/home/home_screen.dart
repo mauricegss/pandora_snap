@@ -13,7 +13,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
   @override
@@ -28,6 +29,42 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  Future<void> _showLogoutDialog() async {
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Fazer Logout'),
+        content: const Text('Tem a certeza de que deseja sair?'),
+        actions: [
+          TextButton(
+            child: const Text('CANCELAR'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('SAIR'),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      if (mounted) {
+        context.read<UserRepository>().logout();
+        context.goNamed(AppRoutes.welcome.name);
+      }
+    }
+  }
+
+  void _openDashboard() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('A dashboard será implementada aqui.'),
+        backgroundColor: Colors.blueGrey,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,12 +72,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         title: const Text('Pandora Snap'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () {
-            context.read<UserRepository>().logout();
-            context.goNamed(AppRoutes.welcome.name);
-          },
+          icon: const Icon(Icons.logout),
+          tooltip: 'Fazer Logout',
+          onPressed: _showLogoutDialog,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.assessment),
+            tooltip: 'Dashboard',
+            onPressed: _openDashboard,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           dividerColor: Colors.black,
@@ -53,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
       ),
-
       body: TabBarView(
         controller: _tabController,
         children: const [
@@ -61,16 +102,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           CalendarScreen(),
         ],
       ),
-      
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
-        onPressed: () {},
+        onPressed: () {
+          // Câmera será implementada aqui
+        },
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
-        child: const Icon(Icons.camera_alt_rounded, size: 28,),
+        child: const Icon(
+          Icons.camera_alt_rounded,
+          size: 28,
+        ),
       ),
     );
   }

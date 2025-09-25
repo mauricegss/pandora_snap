@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PhotoRepository {
   final _supabase = Supabase.instance.client;
+  static const String _photoQuery = '*, dogs(name)';
 
   Future<void> uploadPhoto(File imageFile, Dog dog, model.User user) async {
     try {
@@ -25,27 +26,24 @@ class PhotoRepository {
         'date': DateTime.now().toIso8601String(),
       });
     } catch (e) {
+      print('Erro ao fazer upload da foto: $e');
       throw Exception('Não foi possível enviar a foto.');
     }
   }
 
-  Stream<List<Photo>> getPhotosForDog(int dogId, model.User? user) {
-    if (user == null) return Stream.value([]);
+  Future<List<Photo>> getPhotosForDog(int dogId, model.User? user) async {
+    if (user == null) return [];
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return Stream.value([]);
+    if (userId == null) return [];
 
-    return _supabase
+    final response = await _supabase
         .from('photos')
-        .stream(primaryKey: ['id'])
+        .select(_photoQuery)
         .eq('user_id', userId)
-        .map((listOfMaps) {
+        .eq('dog_id', dogId)
+        .order('date', ascending: false);
 
-          final filteredList = listOfMaps.where((map) => map['dog_id'] == dogId).toList();
-          
-          filteredList.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-
-          return filteredList.map((map) => Photo.fromMap(map)).toList();
-        });
+    return response.map((map) => Photo.fromMap(map)).toList();
   }
 
   Future<String> getLatestCoverPhotoForDog(int dogId, model.User? user) async {
@@ -86,24 +84,21 @@ class PhotoRepository {
     });
   }
 
-  Stream<List<Photo>> getPhotosForDate(DateTime date, model.User? user) {
-    if (user == null) return Stream.value([]);
+  Future<List<Photo>> getPhotosForDate(DateTime date, model.User? user) async {
+    if (user == null) return [];
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return Stream.value([]);
+    if (userId == null) return [];
+    
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    return _supabase
+    final response = await _supabase
         .from('photos')
-        .stream(primaryKey: ['id'])
+        .select(_photoQuery)
         .eq('user_id', userId)
-        .map((listOfMaps) {
-          final filteredList = listOfMaps.where((map) {
-            final photoDate = DateTime.parse(map['date']).toLocal();
-            return photoDate.year == date.year &&
-                   photoDate.month == date.month &&
-                   photoDate.day == date.day;
-          }).toList();
-          
-          return filteredList.map((map) => Photo.fromMap(map)).toList();
-        });
+        .gte('date', startOfDay.toIso8601String())
+        .lte('date', endOfDay.toIso8601String());
+        
+    return response.map((map) => Photo.fromMap(map)).toList();
   }
 }

@@ -8,6 +8,17 @@ class UserRepository extends ChangeNotifier {
 
   model.User? get currentUser => _currentUser;
 
+  UserRepository() {
+    _checkInitialSession();
+  }
+
+  void _checkInitialSession() {
+    final supabaseUser = _auth.currentUser;
+    if (supabaseUser != null) {
+      _currentUser = model.User(username: supabaseUser.email!);
+    }
+  }
+
   Future<model.User?> login(String email, String password) async {
     try {
       final response = await _auth.signInWithPassword(

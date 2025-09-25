@@ -23,8 +23,9 @@ class DayDetailsScreen extends StatelessWidget {
         title: Text('Fotos de $formattedDate'),
         centerTitle: true,
       ),
-      body: StreamBuilder<List<Photo>>(
-        stream: photoRepository.getPhotosForDate(date, currentUser),
+      
+      body: FutureBuilder<List<Photo>>(
+        future: photoRepository.getPhotosForDate(date, currentUser),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

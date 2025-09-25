@@ -16,7 +16,7 @@ class Photo {
   factory Photo.fromMap(Map<String, dynamic> map) {
     return Photo(
       id: map['id'].toString(),
-      dogName: map['dog_name'] ?? '',
+      dogName: map['dogs'] != null ? map['dogs']['name'] : 'Cão Desconhecido',
       url: map['url'],
       date: DateTime.parse(map['date']),
       userId: map['user_id'],
