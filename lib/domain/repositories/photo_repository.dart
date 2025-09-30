@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:pandora_snap/configs/constants.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
@@ -11,14 +12,9 @@ class PhotoRepository {
 
   Future<void> uploadPhoto(File imageFile, Dog dog, model.User user) async {
     try {
-      final String filePath =
-          '${user.username}/${dog.name}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
+      final String filePath = '${user.username}/${dog.name}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       await _supabase.storage.from('photos').upload(filePath, imageFile);
-
-      final String downloadUrl =
-          _supabase.storage.from('photos').getPublicUrl(filePath);
-
+      final String downloadUrl = _supabase.storage.from('photos').getPublicUrl(filePath);
       await _supabase.from('photos').insert({
         'dog_id': dog.id,
         'url': downloadUrl,
@@ -26,8 +22,23 @@ class PhotoRepository {
         'date': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('Erro ao fazer upload da foto: $e');
+      debugPrint('Erro ao fazer upload da foto: $e');
       throw Exception('Não foi possível enviar a foto.');
+    }
+  }
+
+  Future<void> deletePhotoById(String photoId) async {
+    try {
+      final response = await _supabase.from('photos').select('url').eq('id', photoId).single();
+      final photoUrl = response['url'] as String;
+      final bucketName = 'photos';
+      final uri = Uri.parse(photoUrl);
+      final filePath = uri.pathSegments.sublist(uri.pathSegments.indexOf(bucketName) + 1).join('/');
+      await _supabase.storage.from(bucketName).remove([filePath]);
+      await _supabase.from('photos').delete().eq('id', photoId);
+    } catch (e) {
+      debugPrint('Erro ao apagar a foto por ID: $e');
+      throw Exception('Não foi possível apagar a foto.');
     }
   }
 
@@ -35,14 +46,12 @@ class PhotoRepository {
     if (user == null) return [];
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
-
     final response = await _supabase
         .from('photos')
         .select(_photoQuery)
         .eq('user_id', userId)
         .eq('dog_id', dogId)
         .order('date', ascending: false);
-
     return response.map((map) => Photo.fromMap(map)).toList();
   }
 
@@ -50,7 +59,6 @@ class PhotoRepository {
     if (user == null) return noImage;
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return noImage;
-
     try {
       final response = await _supabase
           .from('photos')
@@ -60,7 +68,6 @@ class PhotoRepository {
           .order('date', ascending: false)
           .limit(1)
           .single();
-
       return response['url'];
     } catch (e) {
       return noImage;
@@ -78,8 +85,9 @@ class PhotoRepository {
         .eq('user_id', userId)
         .map((listOfMaps) {
       return listOfMaps.map((map) {
-        final date = DateTime.parse(map['date']).toLocal();
-        return DateTime(date.year, date.month, date.day);
+        final date = DateTime.parse(map['date']);
+        final localDate = date.toLocal();
+        return DateTime(localDate.year, localDate.month, localDate.day);
       }).toSet();
     });
   }
@@ -88,17 +96,14 @@ class PhotoRepository {
     if (user == null) return [];
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
-    
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
     final response = await _supabase
         .from('photos')
         .select(_photoQuery)
         .eq('user_id', userId)
         .gte('date', startOfDay.toIso8601String())
         .lte('date', endOfDay.toIso8601String());
-        
     return response.map((map) => Photo.fromMap(map)).toList();
   }
 }

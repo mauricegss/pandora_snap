@@ -34,7 +34,9 @@ dependencies:
   intl:
   go_router:
   provider:
-  supabase_flutter: ^2.10.1
+  supabase_flutter:
+  camera:
+  path:
 
 dev_dependencies:
   flutter_test:

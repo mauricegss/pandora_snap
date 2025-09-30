@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
+import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 
 class FullscreenImageScreen extends StatefulWidget {
   final List<Photo> photos;
@@ -19,6 +21,8 @@ class FullscreenImageScreen extends StatefulWidget {
 class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
   late PageController _pageController;
   late int _currentIndex;
+  final PhotoRepository _photoRepository = PhotoRepository();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -39,16 +43,74 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
     });
   }
 
+  Future<void> _deletePhoto() async {
+    final photoToDelete = widget.photos[_currentIndex];
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Apagar Foto'),
+        content: const Text('Tem a certeza de que deseja apagar esta foto? Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('CANCELAR')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('APAGAR')),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        await _photoRepository.deletePhotoById(photoToDelete.id);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto apagada com sucesso!'), backgroundColor: Colors.green),
+          );
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro ao apagar a foto: $e'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.photos.isEmpty || _currentIndex >= widget.photos.length) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text("Nenhuma foto para exibir.")),
+      );
+    }
+    
     final currentPhoto = widget.photos[_currentIndex];
-    final formattedDate =
-        DateFormat('dd/MM/yyyy', 'pt_BR').format(currentPhoto.date);
+    final formattedDate = DateFormat('dd/MM/yyyy', 'pt_BR').format(currentPhoto.date);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('${currentPhoto.dogName} - $formattedDate'),
         centerTitle: true,
+        actions: [
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.only(right: 16.0),
+                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.delete_forever),
+                  tooltip: 'Apagar Foto',
+                  onPressed: _deletePhoto,
+                ),
+        ],
       ),
       body: Stack(
         alignment: Alignment.center,
@@ -64,12 +126,11 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
                   panEnabled: true,
                   minScale: 0.5,
                   maxScale: 4.0,
-                  child: Image.network(widget.photos[index].url),
+                  child: Image.network(widget.photos[index].url, fit: BoxFit.contain),
                 ),
               );
             },
           ),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

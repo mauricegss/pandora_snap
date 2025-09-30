@@ -4,6 +4,8 @@ import 'package:pandora_snap/domain/models/dog_model.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/ui/screens/auth/auth_screen.dart';
+import 'package:pandora_snap/ui/screens/camera/camera_screen.dart';
+import 'package:pandora_snap/ui/screens/camera/preview_screen.dart';
 import 'package:pandora_snap/ui/screens/details/day_details_screen.dart';
 import 'package:pandora_snap/ui/screens/details/dog_details_screen.dart';
 import 'package:pandora_snap/ui/screens/details/fullscreen_image_screen.dart';
@@ -17,6 +19,8 @@ enum AppRoutes {
   dogDetails,
   dayDetails,
   fullscreenImage,
+  camera,
+  preview,
 }
 
 class AppRouter {
@@ -73,6 +77,19 @@ class AppRouter {
             photos: photos,
             initialIndex: index,
           );
+        },
+      ),
+      GoRoute(
+        path: '/camera',
+        name: AppRoutes.camera.name,
+        builder: (context, state) => const CameraScreen(),
+      ),
+      GoRoute(
+        path: '/preview',
+        name: AppRoutes.preview.name,
+        builder: (context, state) {
+          final imagePath = state.extra as String;
+          return PreviewScreen(imagePath: imagePath);
         },
       ),
     ],

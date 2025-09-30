@@ -4,12 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DogRepository {
   final _supabase = Supabase.instance.client;
 
-  Future<List<Dog>> getDogs() async {
-    try {
-      final response = await _supabase.from('dogs').select().order('name', ascending: true);
-      return response.map((map) => Dog.fromMap(map)).toList();
-    } catch (e) {
-      return [];
-    }
+  Stream<List<Dog>> getDogs() {
+    return _supabase
+        .from('dogs')
+        .stream(primaryKey: ['id'])
+        .order('name', ascending: true)
+        .map((listOfMaps) => listOfMaps.map((map) => Dog.fromMap(map)).toList());
   }
 }

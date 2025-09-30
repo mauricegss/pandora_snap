@@ -17,8 +17,8 @@ class CollectionScreen extends StatelessWidget {
     final dogRepository = DogRepository();
     final photoRepository = PhotoRepository();
 
-    return FutureBuilder<List<Dog>>(
-      future: dogRepository.getDogs(),
+    return StreamBuilder<List<Dog>>(
+      stream: dogRepository.getDogs(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
