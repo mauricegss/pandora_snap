@@ -12,7 +12,7 @@ class PhotoRepository {
 
   Future<void> uploadPhoto(File imageFile, Dog dog, model.User user) async {
     try {
-      final String filePath = '${user.username}/${dog.name}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String filePath = '${user.username}/${dog.name.toLowerCase()}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       await _supabase.storage.from('photos').upload(filePath, imageFile);
       final String downloadUrl = _supabase.storage.from('photos').getPublicUrl(filePath);
       await _supabase.from('photos').insert({
@@ -29,13 +29,28 @@ class PhotoRepository {
 
   Future<void> deletePhotoById(String photoId) async {
     try {
-      final response = await _supabase.from('photos').select('url').eq('id', photoId).single();
+      final response = await _supabase
+          .from('photos')
+          .select('url')
+          .eq('id', photoId)
+          .single();
+
       final photoUrl = response['url'] as String;
+
       final bucketName = 'photos';
       final uri = Uri.parse(photoUrl);
-      final filePath = uri.pathSegments.sublist(uri.pathSegments.indexOf(bucketName) + 1).join('/');
+      final filePath = uri.pathSegments
+          .sublist(uri.pathSegments.indexOf(bucketName) + 1)
+          .join('/');
+
+      debugPrint("A apagar ficheiro do Storage: $filePath");
       await _supabase.storage.from(bucketName).remove([filePath]);
+      debugPrint("✅ Ficheiro apagado do Storage com sucesso.");
+
+      debugPrint("A apagar registo da base de dados com ID: $photoId");
       await _supabase.from('photos').delete().eq('id', photoId);
+      debugPrint("✅ Registo apagado da base de dados com sucesso.");
+
     } catch (e) {
       debugPrint('Erro ao apagar a foto por ID: $e');
       throw Exception('Não foi possível apagar a foto.');

@@ -37,6 +37,8 @@ dependencies:
   supabase_flutter:
   camera:
   path:
+  http:
+  image:
 
 dev_dependencies:
   flutter_test:
