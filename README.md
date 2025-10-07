@@ -1,16 +1,24 @@
-# pandora_snap
+# Pandora Snap
 
-A new Flutter project.
+* **Em criação por:** Maurice Golin Soares dos Santos
+* Este projeto é um aplicativo desenvolvido para a comunidade da UTFPR, com o objetivo de facilitar a coleta de fotos dos cães do campus. 
+* Usuários poderão capturar imagens dos cães, contribuindo para um banco de dados que será utilizado em futuras pesquisas e projetos.
 
-## Getting Started
+### Atividades Desenvolvidas
 
-This project is a starting point for a Flutter application.
+* Desenvolvimento full-stack do aplicativo.
+* Estruturação do projeto e arquitetura.
+* Implementação da interface de usuário (UI).
+* Configuração e integração com o Supabase (banco de dados e autenticação).
+* Gerenciamento de estado com Provider e navegação com Go Router.
+* Implementação das funcionalidades de câmera, galeria, e visualização de fotos.
 
-A few resources to get you started if this is your first Flutter project:
+### Melhorias Restantes
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+* **Redirecionamento de Login Inválido:** quando o usuário insere credenciais de login inválidas, ele é redirecionado para a tela de boas-vindas (`welcome_screen`), em vez de permanecer na tela de login.
+* **Reportar Novos Cães:** Implementar uma funcionalidade que permita aos usuários reportar a presença de um novo cão na universidade.
+* **Cache Local de Imagens:** Adicionar um sistema de cache local para as imagens. Isso, combinado com o uso do `notifyListeners` do Provider, irá agilizar a exibição de novas fotos na galeria do usuário.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Funcionalidades Faltantes
+
+* **Comunicação com o Edge Impulse:** A integração com os servidores do Edge Impulse ainda não foi implementada. Isso inclui o envio das imagens com as respectivas bounding boxes para a base de dados da plataforma de Machine Learning.
