@@ -42,7 +42,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
     if (imageBox == null) return;
 
     final currentPoint = imageBox.globalToLocal(details.globalPosition);
-    // Cria o retângulo visualmente correto, independentemente da direção.
     final visualRect = Rect.fromPoints(_startPoint!, currentPoint);
     
     setState(() => _boundingBox = visualRect);
@@ -98,7 +97,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
       final scaleX = croppedImage.width / imageBox.size.width;
       final scaleY = croppedImage.height / imageBox.size.height;
 
-      // --- CORREÇÃO DA BOUNDING BOX (Normalização dos Dados) ---
       final normalizedBBox = Rect.fromLTRB(
         min(_boundingBox!.left, _boundingBox!.right) * scaleX,
         min(_boundingBox!.top, _boundingBox!.bottom) * scaleY,
@@ -106,10 +104,8 @@ class _PreviewScreenState extends State<PreviewScreen> {
         max(_boundingBox!.top, _boundingBox!.bottom) * scaleY,
       );
 
-      // --- CORREÇÃO DO NOME EM MINÚSCULAS ---
       final dogLabel = _selectedDog!.name.toLowerCase();
 
-      // --- LÓGICA DE FALLBACK ---
       debugPrint("A tentar enviar para o Edge Impulse...");
       final status = await EdgeImpulseService().uploadImage(
         imageFile: croppedFile,
@@ -117,22 +113,23 @@ class _PreviewScreenState extends State<PreviewScreen> {
         boundingBox: normalizedBBox,
       );
 
-      String finalMessage = "Foto processada com sucesso!";
-      Color finalMessageColor = Colors.green;
+      String finalMessage;
+      Color finalMessageColor;
 
       if (status == UploadStatus.serverOffline) {
         debugPrint("Servidor Edge Impulse offline. A enviar apenas para o Supabase.");
-        finalMessage = "Foto guardada na galeria. O servidor de análise está offline.";
+        finalMessage = "Foto guardada. O servidor de análise está offline.";
         finalMessageColor = Colors.orangeAccent;
       } else if (status == UploadStatus.failed) {
         debugPrint("Falha no envio para o Edge Impulse. A enviar apenas para o Supabase.");
-        finalMessage = "Falha no servidor de análise. A foto foi guardada apenas na galeria.";
+        finalMessage = "Foto guardada. Falha no envio para o servidor de análise.";
         finalMessageColor = Colors.redAccent;
       } else {
         debugPrint("✅ Requisição para o Edge Impulse enviada!");
+        finalMessage = "Foto enviada com sucesso!";
+        finalMessageColor = Colors.green;
       }
 
-      // Upload para o Supabase é feito em todos os cenários.
       if (user != null) {
         debugPrint("A enviar para o Supabase...");
         await PhotoRepository().uploadPhoto(croppedFile, _selectedDog!, user);

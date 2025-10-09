@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async'; // Importe o dart:async para usar o TimeoutException
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
@@ -42,6 +43,9 @@ class EdgeImpulseService {
       }
     } on SocketException {
       debugPrint('Exceção de Socket: Não foi possível conectar ao servidor. Verifique o IP e se o servidor está online.');
+      return UploadStatus.serverOffline;
+    } on TimeoutException {
+      debugPrint('Timeout: A conexão com o servidor demorou demais. Verifique o IP e se o servidor está online.');
       return UploadStatus.serverOffline;
     } catch (e) {
       debugPrint('Exceção ao enviar para o servidor local: $e');

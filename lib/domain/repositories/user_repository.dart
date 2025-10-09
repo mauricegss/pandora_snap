@@ -15,7 +15,7 @@ class UserRepository extends ChangeNotifier {
   void _checkInitialSession() {
     final supabaseUser = _auth.currentUser;
     if (supabaseUser != null) {
-      _currentUser = model.User(username: supabaseUser.email!);
+      _currentUser = model.User(id: supabaseUser.id, username: supabaseUser.email!);
     }
   }
 
@@ -26,14 +26,13 @@ class UserRepository extends ChangeNotifier {
         password: password,
       );
       if (response.user != null) {
-        _currentUser = model.User(username: response.user!.email!);
+        _currentUser = model.User(id: response.user!.id, username: response.user!.email!);
         notifyListeners();
         return _currentUser;
       }
       return null;
     } catch (e) {
       _currentUser = null;
-      notifyListeners();
       return null;
     }
   }

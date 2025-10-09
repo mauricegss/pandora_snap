@@ -147,11 +147,8 @@ class _AuthScreenState extends State<AuthScreen> {
             ],
           ),
           if (_isLoading)
-            Container(
-              color: Colors.black,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+            const Center(
+              child: CircularProgressIndicator(),
             ),
         ],
       ),

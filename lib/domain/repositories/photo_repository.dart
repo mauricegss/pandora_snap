@@ -12,7 +12,7 @@ class PhotoRepository {
 
   Future<void> uploadPhoto(File imageFile, Dog dog, model.User user) async {
     try {
-      final String filePath = '${user.username}/${dog.name.toLowerCase()}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String filePath = '${user.id}/${dog.name}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       await _supabase.storage.from('photos').upload(filePath, imageFile);
       final String downloadUrl = _supabase.storage.from('photos').getPublicUrl(filePath);
       await _supabase.from('photos').insert({
