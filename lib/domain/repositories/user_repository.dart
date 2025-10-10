@@ -19,21 +19,23 @@ class UserRepository extends ChangeNotifier {
     }
   }
 
-  Future<model.User?> login(String email, String password) async {
+  Future<model.User> login(String email, String password) async {
     try {
       final response = await _auth.signInWithPassword(
         email: email,
         password: password,
       );
-      if (response.user != null) {
-        _currentUser = model.User(id: response.user!.id, username: response.user!.email!);
+      final user = response.user;
+      if (user != null) {
+        _currentUser = model.User(id: user.id, username: user.email!);
         notifyListeners();
-        return _currentUser;
+        return _currentUser!;
       }
-      return null;
+      throw 'Utilizador não encontrado na resposta.';
+    } on AuthException catch (e) {
+      throw e.message;
     } catch (e) {
-      _currentUser = null;
-      return null;
+      throw 'Ocorreu um erro inesperado durante o login.';
     }
   }
 
@@ -43,15 +45,16 @@ class UserRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<void> register(String email, String password) async {
     try {
       await _auth.signUp(
         email: email,
         password: password,
       );
-      return true;
+    } on AuthException catch (e) {
+      throw e.message;
     } catch (e) {
-      return false;
+      throw 'Ocorreu um erro inesperado durante o registo.';
     }
   }
 }

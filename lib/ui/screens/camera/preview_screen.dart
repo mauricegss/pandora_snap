@@ -1,15 +1,16 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image/image.dart' as img;
 import 'package:pandora_snap/configs/routes.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
 import 'package:pandora_snap/domain/repositories/dog_repository.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
-import 'package:pandora_snap/services/edge_impulse_service.dart';
-import 'package:provider/provider.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
+import 'package:pandora_snap/services/edge_impulse_service.dart';
+import 'package:pandora_snap/services/photo_processing_service.dart';
+import 'package:pandora_snap/ui/screens/home/calendar_viewmodel.dart';
+import 'package:pandora_snap/ui/screens/home/collection_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class PreviewScreen extends StatefulWidget {
   final String imagePath;
@@ -43,13 +44,12 @@ class _PreviewScreenState extends State<PreviewScreen> {
 
     final currentPoint = imageBox.globalToLocal(details.globalPosition);
     final visualRect = Rect.fromPoints(_startPoint!, currentPoint);
-    
+
     setState(() => _boundingBox = visualRect);
   }
 
   Future<void> _processAndUpload() async {
     if (_selectedDog == null || _boundingBox == null) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Selecione um cão e desenhe uma caixa ao redor dele.'),
         backgroundColor: Colors.orangeAccent,
@@ -57,99 +57,57 @@ class _PreviewScreenState extends State<PreviewScreen> {
       return;
     }
     
-    if (!mounted) return;
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
     final user = context.read<UserRepository>().currentUser;
+    final collectionViewModel = context.read<CollectionViewModel>();
+    final calendarViewModel = context.read<CalendarViewModel>();
+    final router = GoRouter.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final RenderBox? imageBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-
-    if (imageBox == null) {
-      scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Erro ao renderizar a imagem. Tente novamente.'), backgroundColor: Colors.red));
-      return;
-    }
+    if (user == null || imageBox == null) return;
 
     setState(() => _isLoading = true);
+    
+    final processingService = PhotoProcessingService(
+      edgeImpulseService: EdgeImpulseService(),
+      photoRepository: context.read<PhotoRepository>(),
+    );
 
-    try {
-      final originalFile = File(widget.imagePath);
-      final imageBytes = await originalFile.readAsBytes();
-      final originalImage = img.decodeImage(imageBytes)!;
+    final result = await processingService.processAndUpload(
+      imagePath: widget.imagePath,
+      selectedDog: _selectedDog!,
+      user: user,
+      boundingBox: _boundingBox!,
+      imageRenderSize: imageBox.size,
+    );
 
-      final originalWidth = originalImage.width;
-      final originalHeight = originalImage.height;
-      int cropWidth, cropHeight, offsetX, offsetY;
-      if (originalWidth / originalHeight > 3 / 4) {
-        cropHeight = originalHeight;
-        cropWidth = (originalHeight * 3) ~/ 4;
-        offsetX = (originalWidth - cropWidth) ~/ 2;
-        offsetY = 0;
-      } else {
-        cropWidth = originalWidth;
-        cropHeight = (originalWidth * 4) ~/ 3;
-        offsetX = 0;
-        offsetY = (originalHeight - cropHeight) ~/ 2;
-      }
+    if (!mounted) return;
 
-      final croppedImage = img.copyCrop(originalImage, x: offsetX, y: offsetY, width: cropWidth, height: cropHeight);
-      final croppedFile = File('${originalFile.parent.path}/cropped_${originalFile.uri.pathSegments.last}');
-      await croppedFile.writeAsBytes(img.encodeJpg(croppedImage));
+    String finalMessage;
+    Color finalMessageColor;
 
-      final scaleX = croppedImage.width / imageBox.size.width;
-      final scaleY = croppedImage.height / imageBox.size.height;
-
-      final normalizedBBox = Rect.fromLTRB(
-        min(_boundingBox!.left, _boundingBox!.right) * scaleX,
-        min(_boundingBox!.top, _boundingBox!.bottom) * scaleY,
-        max(_boundingBox!.left, _boundingBox!.right) * scaleX,
-        max(_boundingBox!.top, _boundingBox!.bottom) * scaleY,
-      );
-
-      final dogLabel = _selectedDog!.name.toLowerCase();
-
-      debugPrint("A tentar enviar para o Edge Impulse...");
-      final status = await EdgeImpulseService().uploadImage(
-        imageFile: croppedFile,
-        label: dogLabel,
-        boundingBox: normalizedBBox,
-      );
-
-      String finalMessage;
-      Color finalMessageColor;
-
-      if (status == UploadStatus.serverOffline) {
-        debugPrint("Servidor Edge Impulse offline. A enviar apenas para o Supabase.");
-        finalMessage = "Foto guardada. O servidor de análise está offline.";
-        finalMessageColor = Colors.orangeAccent;
-      } else if (status == UploadStatus.failed) {
-        debugPrint("Falha no envio para o Edge Impulse. A enviar apenas para o Supabase.");
-        finalMessage = "Foto guardada. Falha no envio para o servidor de análise.";
-        finalMessageColor = Colors.redAccent;
-      } else {
-        debugPrint("✅ Requisição para o Edge Impulse enviada!");
+    switch (result) {
+      case PhotoUploadResult.success:
         finalMessage = "Foto enviada com sucesso!";
         finalMessageColor = Colors.green;
-      }
-
-      if (user != null) {
-        debugPrint("A enviar para o Supabase...");
-        await PhotoRepository().uploadPhoto(croppedFile, _selectedDog!, user);
-        debugPrint("✅ Enviado para o Supabase com sucesso!");
-      }
-
-      await croppedFile.delete();
-
-      if (!mounted) return;
-      scaffoldMessenger.showSnackBar(SnackBar(content: Text(finalMessage), backgroundColor: finalMessageColor));
-      router.goNamed(AppRoutes.home.name);
-
-    } catch (e) {
-      if (!mounted) return;
-      scaffoldMessenger.showSnackBar(SnackBar(content: Text('Ocorreu um erro no processamento: $e'), backgroundColor: Colors.red));
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+        break;
+      case PhotoUploadResult.serverOffline:
+        finalMessage = "Foto guardada. O servidor de análise está offline.";
+        finalMessageColor = Colors.orangeAccent;
+        break;
+      case PhotoUploadResult.error:
+        finalMessage = "Ocorreu um erro no processamento.";
+        finalMessageColor = Colors.red;
+        break;
     }
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(content: Text(finalMessage), backgroundColor: finalMessageColor)
+    );
+
+    await collectionViewModel.fetchData(user);
+    await calendarViewModel.fetchData(user);
+
+    router.goNamed(AppRoutes.home.name);
   }
 
   @override
@@ -184,7 +142,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
                 elevation: 4,
                 borderRadius: BorderRadius.circular(8),
                 child: StreamBuilder<List<Dog>>(
-                    stream: DogRepository().getDogs(),
+                    stream: context.read<DogRepository>().getDogs(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return const Center(child: LinearProgressIndicator());
                       return DropdownButtonFormField<Dog>(

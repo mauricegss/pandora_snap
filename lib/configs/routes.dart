@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pandora_snap/domain/models/dog_model.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/ui/screens/auth/auth_screen.dart';
@@ -52,8 +51,8 @@ class AppRouter {
             path: 'dog-details',
             name: AppRoutes.dogDetails.name,
             builder: (context, state) {
-              final dog = state.extra as Dog;
-              return DogDetailsScreen(dog: dog);
+              final photos = state.extra as List<Photo>;
+              return DogDetailsScreen(photos: photos);
             },
           ),
         ],
@@ -62,8 +61,8 @@ class AppRouter {
         path: '/day-details',
         name: AppRoutes.dayDetails.name,
         builder: (context, state) {
-          final date = state.extra as DateTime;
-          return DayDetailsScreen(date: date);
+          final photos = state.extra as List<Photo>;
+          return DayDetailsScreen(photos: photos);
         },
       ),
       GoRoute(

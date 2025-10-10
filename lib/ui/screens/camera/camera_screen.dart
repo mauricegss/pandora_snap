@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/configs/routes.dart';
+import 'package:pandora_snap/ui/widgets/fab_widget.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -101,17 +102,8 @@ class _CameraScreenState extends State<CameraScreen> {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.amber,
-        foregroundColor: Colors.black,
+      floatingActionButton: Fab(
         onPressed: _takePicture,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        child: const Icon(
-          Icons.camera_alt_rounded,
-          size: 28,
-        ),
       ),
     );
   }

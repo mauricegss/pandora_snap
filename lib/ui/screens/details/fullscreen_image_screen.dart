@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
+import 'package:provider/provider.dart';
 
 class FullscreenImageScreen extends StatefulWidget {
   final List<Photo> photos;
@@ -21,7 +23,6 @@ class FullscreenImageScreen extends StatefulWidget {
 class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
   late PageController _pageController;
   late int _currentIndex;
-  final PhotoRepository _photoRepository = PhotoRepository();
   bool _isLoading = false;
 
   @override
@@ -45,6 +46,7 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
 
   Future<void> _deletePhoto() async {
     final photoToDelete = widget.photos[_currentIndex];
+    final photoRepository = context.read<PhotoRepository>();
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -61,7 +63,7 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
-        await _photoRepository.deletePhotoById(photoToDelete.id);
+        await photoRepository.deletePhotoById(photoToDelete.id);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +128,12 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
                   panEnabled: true,
                   minScale: 0.5,
                   maxScale: 4.0,
-                  child: Image.network(widget.photos[index].url, fit: BoxFit.contain),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.photos[index].url,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                    errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
+                  ),
                 ),
               );
             },

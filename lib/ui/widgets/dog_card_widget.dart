@@ -1,18 +1,22 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/domain/models/dog_model.dart';
+import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/configs/routes.dart';
 
 class DogCard extends StatelessWidget {
   final Dog dog;
   final bool isCaptured;
   final String coverPhotoUrl;
+  final List<Photo> photos;
 
   const DogCard({
     super.key,
     required this.dog,
     required this.isCaptured,
     required this.coverPhotoUrl,
+    required this.photos,
   });
 
   @override
@@ -25,11 +29,11 @@ class DogCard extends StatelessWidget {
         fit: BoxFit.cover,
       );
     } else {
-      imageWidget = Image.network(
-        coverPhotoUrl,
+      imageWidget = CachedNetworkImage(
+        imageUrl: coverPhotoUrl,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.error, color: Colors.red),
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
       );
     }
 
@@ -40,7 +44,7 @@ class DogCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (isCaptured) {
-            context.pushNamed(AppRoutes.dogDetails.name, extra: dog);
+            context.pushNamed(AppRoutes.dogDetails.name, extra: photos);
           }
         },
         child: Column(

@@ -4,6 +4,7 @@ import 'package:pandora_snap/configs/routes.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
 import 'package:pandora_snap/ui/screens/home/calendar_screen.dart';
 import 'package:pandora_snap/ui/screens/home/collection_screen.dart';
+import 'package:pandora_snap/ui/widgets/fab_widget.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -102,21 +103,11 @@ class _HomeScreenState extends State<HomeScreen>
           CalendarScreen(),
         ],
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.amber,
-        foregroundColor: Colors.black,
+      floatingActionButton: Fab(
         onPressed: () {
           context.pushNamed(AppRoutes.camera.name);
         },
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        child: const Icon(
-          Icons.camera_alt_rounded,
-          size: 28,
-        ),
       ),
     );
   }

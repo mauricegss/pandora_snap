@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
@@ -37,11 +38,11 @@ class PhotoGridView extends StatelessWidget {
             tag: photo.id,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12.0),
-              child: Image.network(
-                photo.url,
+              child: CachedNetworkImage(
+                imageUrl: photo.url,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.error, color: Colors.red),
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
               ),
             ),
           ),

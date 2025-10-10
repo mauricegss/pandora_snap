@@ -1,73 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:pandora_snap/domain/models/dog_model.dart';
-import 'package:pandora_snap/domain/models/photo_model.dart';
-import 'package:pandora_snap/domain/models/user_model.dart' as model;
-import 'package:pandora_snap/domain/repositories/dog_repository.dart';
-import 'package:pandora_snap/domain/repositories/photo_repository.dart';
 import 'package:pandora_snap/domain/repositories/user_repository.dart';
+import 'package:pandora_snap/ui/screens/home/collection_viewmodel.dart';
 import 'package:pandora_snap/ui/widgets/dog_card_widget.dart';
 import 'package:provider/provider.dart';
 
-class CollectionScreen extends StatelessWidget {
+class CollectionScreen extends StatefulWidget {
   const CollectionScreen({super.key});
 
   @override
+  State<CollectionScreen> createState() => _CollectionScreenState();
+}
+
+class _CollectionScreenState extends State<CollectionScreen> with AutomaticKeepAliveClientMixin {
+  
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<UserRepository>().currentUser;
+      context.read<CollectionViewModel>().fetchData(user);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final model.User? currentUser = context.watch<UserRepository>().currentUser;
-    final dogRepository = DogRepository();
-    final photoRepository = PhotoRepository();
+    super.build(context);
+    final viewModel = context.watch<CollectionViewModel>();
 
-    return StreamBuilder<List<Dog>>(
-      stream: dogRepository.getDogs(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return const Center(child: Text('Não foi possível carregar os cães.'));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Nenhum cão encontrado.'));
-        }
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        final dogCollection = snapshot.data!;
+    if (viewModel.dogsWithPhotos.isEmpty) {
+      return const Center(child: Text('Nenhum cão encontrado.'));
+    }
 
-        return GridView.builder(
-          padding: const EdgeInsets.all(16.0),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16.0,
-            mainAxisSpacing: 16.0,
-            childAspectRatio: 0.95,
-          ),
-          itemCount: dogCollection.length,
-          itemBuilder: (context, index) {
-            final dog = dogCollection[index];
-
-            return FutureBuilder<String>(
-              future: photoRepository.getLatestCoverPhotoForDog(dog.id, currentUser),
-              builder: (context, coverPhotoSnapshot) {
-                if (coverPhotoSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Card(child: Center(child: CircularProgressIndicator()));
-                }
-
-                final coverPhotoUrl = coverPhotoSnapshot.data ?? 'assets/no_image.png';
-
-                return FutureBuilder<List<Photo>>(
-                  future: photoRepository.getPhotosForDog(dog.id, currentUser),
-                  builder: (context, photoListSnapshot) {
-                    final isCaptured = photoListSnapshot.hasData && photoListSnapshot.data!.isNotEmpty;
-                    
-                    return DogCard(
-                      dog: dog,
-                      isCaptured: isCaptured,
-                      coverPhotoUrl: coverPhotoUrl,
-                    );
-                  },
-                );
-              },
-            );
-          },
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.95,
+      ),
+      itemCount: viewModel.dogsWithPhotos.length,
+      itemBuilder: (context, index) {
+        final dogData = viewModel.dogsWithPhotos[index];
+        return DogCard(
+          dog: dogData.dog,
+          isCaptured: dogData.isCaptured,
+          coverPhotoUrl: dogData.coverPhotoUrl,
+          photos: dogData.photos,
         );
       },
     );

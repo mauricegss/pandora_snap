@@ -32,27 +32,28 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  void _showErrorSnackbar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
   Future<void> _login() async {
     setState(() => _isLoading = true);
     try {
       final email = _loginEmailController.text;
       final password = _loginPasswordController.text;
-
-      final user =
-          await context.read<UserRepository>().login(email, password);
-
+      await context.read<UserRepository>().login(email, password);
       if (mounted) {
-        if (user != null) {
-          context.goNamed(AppRoutes.home.name);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email ou senha inválidos.'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
+        context.goNamed(AppRoutes.home.name);
       }
+    } catch (e) {
+      _showErrorSnackbar(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -73,31 +74,23 @@ class _AuthScreenState extends State<AuthScreen> {
             backgroundColor: Colors.orangeAccent,
           ),
         );
+        setState(() => _isLoading = false);
         return;
       }
 
-      final success =
-          await context.read<UserRepository>().register(email, password);
+      await context.read<UserRepository>().register(email, password);
 
       if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Conta criada com sucesso! Faça o login para continuar.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _showLoginPage();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ocorreu um erro. Verifique o email ou tente novamente.'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Conta criada com sucesso! Verifique o seu email para confirmar.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _showLoginPage();
       }
+    } catch (e) {
+      _showErrorSnackbar(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -128,7 +121,6 @@ class _AuthScreenState extends State<AuthScreen> {
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-
               LoginView(
                 emailController: _loginEmailController,
                 passwordController: _loginPasswordController,
@@ -136,7 +128,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 onLoginPressed: _login,
                 onShowRegisterPressed: _showRegisterPage,
               ),
-
               RegisterView(
                 emailController: _registerEmailController,
                 passwordController: _registerPasswordController,
