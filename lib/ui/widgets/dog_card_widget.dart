@@ -44,7 +44,7 @@ class DogCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (isCaptured) {
-            context.pushNamed(AppRoutes.dogDetails.name, extra: photos);
+            context.pushNamed(AppRoutes.dogDetails.name, extra: dog);
           }
         },
         child: Column(

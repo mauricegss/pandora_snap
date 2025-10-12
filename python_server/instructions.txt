@@ -1,0 +1,62 @@
+# PYTHON SERVER DEPLOYMENT INSTRUCTIONS #
+
+A complete guide to publish and update the server on Google Cloud Run.
+
+IMPORTANT: Replace "YOUR_PROJECT_ID_HERE" with your actual Google Cloud Project ID in all commands.
+
+---
+# PART 1: FIRST-TIME SETUP (One-Time Actions Only)
+---
+
+These steps are for setting up a new project from scratch.
+
+1.  Install Prerequisites:
+    * Docker Desktop: docker.com/products/docker-desktop
+    * Google Cloud CLI: cloud.google.com/sdk/docs/install
+
+2.  Configure the gcloud CLI in your terminal:
+    gcloud auth login
+    gcloud config set project YOUR_PROJECT_ID_HERE
+
+3.  Enable the necessary Google Cloud APIs:
+    gcloud services enable run.googleapis.com
+    gcloud services enable artifactregistry.googleapis.com
+    gcloud services enable cloudbuild.googleapis.com
+
+4.  Create the Artifact Registry repository to store the server images:
+    gcloud artifacts repositories create pandora-snap-repo --repository-format=docker --location=us-central1 --description="Image repository for Pandora Snap app"
+
+5.  Perform the VERY FIRST deploy. This command builds the source, deploys it, and sets all the critical configurations at once:
+    * Sets Memory to 2GiB (required for Playwright).
+    * Sets CPU to be always allocated (required for background tasks).
+    * Allows public access to the service.
+
+    gcloud run deploy edge-impulse-server --project=YOUR_PROJECT_ID_HERE --source=./python_server --region=us-central1 --memory=2Gi --no-cpu-throttling --allow-unauthenticated
+
+6.  Add the Edge Impulse credentials as environment variables.
+    (Replace the example values with your real credentials).
+
+    gcloud run services update edge-impulse-server --project=YOUR_PROJECT_ID_HERE --region=us-central1 --update-env-vars="THE_EMAIL=your-email@example.com,THE_PASSWORD=your-secret-password,THE_PROJECT_ID=your-edge-impulse-id"
+
+
+---
+# PART 2: UPDATING THE SERVER (The process you will repeat)
+---
+
+Whenever you make changes to "edge_impulse_server.py" or the "Dockerfile", follow these two steps.
+
+Run these commands from the project's root folder (e.g., C:\GitHub\pandora_snap).
+
+# STEP 1: Build and push the new version of the code
+# (This can take a few minutes)
+
+gcloud builds submit ./python_server --project=YOUR_PROJECT_ID_HERE --tag=us-central1-docker.pkg.dev/YOUR_PROJECT_ID_HERE/pandora-snap-repo/edge-impulse-server
+
+
+# STEP 2: Deploy the new image to Cloud Run
+# (This tells Cloud Run to use the new version you just built)
+
+gcloud run deploy edge-impulse-server --project=YOUR_PROJECT_ID_HERE --image=us-central1-docker.pkg.dev/YOUR_PROJECT_ID_HERE/pandora-snap-repo/edge-impulse-server --region=us-central1
+
+
+# END. The server is now updated.

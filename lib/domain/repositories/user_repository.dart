@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pandora_snap/domain/models/user_model.dart' as model;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,18 +6,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class UserRepository extends ChangeNotifier {
   final GoTrueClient _auth = Supabase.instance.client.auth;
   model.User? _currentUser;
+  late final StreamSubscription<AuthState> _authStateSubscription;
 
   model.User? get currentUser => _currentUser;
 
   UserRepository() {
-    _checkInitialSession();
+    _authStateSubscription = _auth.onAuthStateChange.listen((data) {
+      final Session? session = data.session;
+      if (session != null) {
+        _currentUser = model.User(id: session.user.id, username: session.user.email!);
+      } else {
+        _currentUser = null;
+      }
+      notifyListeners();
+    });
   }
-
-  void _checkInitialSession() {
-    final supabaseUser = _auth.currentUser;
-    if (supabaseUser != null) {
-      _currentUser = model.User(id: supabaseUser.id, username: supabaseUser.email!);
-    }
+  @override
+  void dispose() {
+    _authStateSubscription.cancel();
+    super.dispose();
   }
 
   Future<model.User> login(String email, String password) async {
@@ -41,8 +49,6 @@ class UserRepository extends ChangeNotifier {
 
   Future<void> logout() async {
     await _auth.signOut();
-    _currentUser = null;
-    notifyListeners();
   }
 
   Future<void> register(String email, String password) async {

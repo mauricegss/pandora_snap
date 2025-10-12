@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pandora_snap/domain/models/photo_model.dart';
 import 'package:pandora_snap/domain/repositories/photo_repository.dart';
+import 'package:pandora_snap/domain/repositories/user_repository.dart';
+import 'package:pandora_snap/ui/screens/home/calendar_viewmodel.dart';
+import 'package:pandora_snap/ui/screens/home/collection_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class FullscreenImageScreen extends StatefulWidget {
@@ -47,6 +50,9 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
   Future<void> _deletePhoto() async {
     final photoToDelete = widget.photos[_currentIndex];
     final photoRepository = context.read<PhotoRepository>();
+    final collectionViewModel = context.read<CollectionViewModel>();
+    final calendarViewModel = context.read<CalendarViewModel>();
+    final user = context.read<UserRepository>().currentUser;
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -63,7 +69,12 @@ class _FullscreenImageScreenState extends State<FullscreenImageScreen> {
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
+        final imageUrl = photoToDelete.url;
         await photoRepository.deletePhotoById(photoToDelete.id);
+        await CachedNetworkImage.evictFromCache(imageUrl);
+
+        collectionViewModel.fetchData(user);
+        calendarViewModel.fetchData(user);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

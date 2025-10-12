@@ -9,77 +9,74 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# --- CONFIGURAÇÃO ---
 EMAIL = os.getenv("THE_EMAIL")
 PASSWORD = os.getenv("THE_PASSWORD")
 PROJECT_ID = os.getenv("THE_PROJECT_ID")
 
 def upload_and_cleanup(image_path, label_path):
-    print(f"THREAD INICIADA: A começar o upload para {image_path}")
+    print(f"THREAD INICIADA: A começar o upload para {image_path}", flush=True)
     success, message = upload_via_browser(image_path, label_path)
 
     if success:
-        print("THREAD: Upload bem-sucedido.")
+        print("THREAD: Upload bem-sucedido.", flush=True)
     else:
-        print(f"THREAD: Ocorreu um erro no upload - {message}")
+        print(f"THREAD: Ocorreu um erro no upload - {message}", flush=True)
 
     try:
         os.remove(image_path)
         os.remove(label_path)
-        print("THREAD: Ficheiros temporários removidos.")
+        print("THREAD: Ficheiros temporários removidos.", flush=True)
     except OSError as e:
-        print(f"THREAD: Erro ao remover ficheiros temporários: {e}")
+        print(f"THREAD: Erro ao remover ficheiros temporários: {e}", flush=True)
 
 def upload_via_browser(image_path, label_path):
     try:
         with sync_playwright() as p:
-            # headless=False abre uma janela do navegador para depuração.
-            browser = p.chromium.launch(headless=True) 
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            
-            print("Iniciando login no Edge Impulse...")
+
+            print("Iniciando login no Edge Impulse...", flush=True)
             page.goto("https://studio.edgeimpulse.com/login")
             page.fill('#username-or-email-input', EMAIL)
             page.click('text=Next')
             page.wait_for_selector('#password', timeout=15000)
             page.fill('#password', PASSWORD)
             page.click('#login-button')
-            
-            print("Login bem-sucedido. Navegando para a página de aquisição de dados...")
+
+            print("Login bem-sucedido. Navegando para a página de aquisição de dados...", flush=True)
             page.wait_for_selector('text=Dashboard', timeout=15000)
             page.goto(f"https://studio.edgeimpulse.com/studio/{PROJECT_ID}/acquisition/training")
-            
+
             page.wait_for_load_state('networkidle', timeout=10000)
 
-            print("Abrindo o diálogo de upload...")
-            upload_dialog_locator = page.locator('#add-data-modal')
+            print("Abrindo o diálogo de upload...", flush=True)
             page.click('a.btn-acquisition-upload')
-            
-            page.wait_for_selector('#file-selector', state='visible', timeout=5000)
-            print(f"Enviando ficheiros: {image_path} e {label_path}")
-            page.set_input_files('#file-selector', [image_path, label_path])
-            
-            time.sleep(1) 
 
-            print("Iniciando o upload...")
+            page.wait_for_selector('#file-selector', state='visible', timeout=5000)
+            print(f"Enviando ficheiros: {image_path} e {label_path}", flush=True)
+            page.set_input_files('#file-selector', [image_path, label_path])
+
+            time.sleep(1)
+
+            print("Iniciando o upload...", flush=True)
             page.click('#upload-button')
-            
-            print("Aguardando a conclusão do upload (5 segundos)...")
+
+            print("Aguardando a conclusão do upload (5 segundos)...", flush=True)
             time.sleep(5)
-            
-            print("✅ Upload concluído com sucesso!")
+
+            print("✅ Upload concluído com sucesso!", flush=True)
             browser.close()
             return True, "Upload via browser concluído com sucesso."
-            
+
     except PlaywrightTimeoutError as e:
         error_message = f"Ocorreu um timeout durante a automação: {e}"
-        print(f"❌ ERRO: {error_message}")
+        print(f"❌ ERRO: {error_message}", flush=True)
         try: browser.close()
         except: pass
         return False, error_message
     except Exception as e:
         error_message = f"Ocorreu um erro inesperado na automação: {e}"
-        print(f"❌ ERRO: {error_message}")
+        print(f"❌ ERRO: {error_message}", flush=True)
         try: browser.close()
         except: pass
         return False, error_message
@@ -97,18 +94,12 @@ def handle_upload():
         "width": int(request.form.get('bbox_width')),
         "height": int(request.form.get('bbox_height')),
     }
-    
-    # --- CORREÇÃO DOS NOMES DE FICHEIRO APLICADA AQUI ---
-    # 1. Cria um nome de ficheiro único para a imagem.
-    unique_image_filename = f"{int(time.time())}_{label}.jpg"
-    
-    # 2. O nome do ficheiro de labels é sempre 'info.labels'.
-    label_filename = "info.labels"
 
+    unique_image_filename = f"{int(time.time())}_{label}.jpg"
+    label_filename = "info.labels"
     image_path = os.path.join(os.getcwd(), unique_image_filename)
     image_file.save(image_path)
 
-    # 3. O conteúdo do 'info.labels' aponta para o nome único da imagem.
     labels_data = {
         "version": 1,
         "files": [
@@ -120,14 +111,13 @@ def handle_upload():
             }
         ]
     }
-    
+
     label_path = os.path.join(os.getcwd(), label_filename)
     with open(label_path, "w") as f:
         json.dump(labels_data, f)
-    
-    print(f"Ficheiros temporários criados: {image_path} e {label_path}")
 
-    # Inicia a automação em segundo plano
+    print(f"Ficheiros temporários criados: {image_path} e {label_path}", flush=True)
+
     thread = threading.Thread(target=upload_and_cleanup, args=(image_path, label_path))
     thread.start()
 

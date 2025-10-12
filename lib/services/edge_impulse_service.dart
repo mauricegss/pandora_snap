@@ -1,13 +1,14 @@
 import 'dart:io';
-import 'dart:async'; // Importe o dart:async para usar o TimeoutException
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum UploadStatus { success, serverOffline, failed }
 
 class EdgeImpulseService {
-  final String _serverUrl = 'http://192.168.100.116:5000/upload';// ATENÇÃO: Verificar IP
+  final String _serverUrl = "${dotenv.env['CLOUD_RUN_URL']!}/upload";
 
   Future<UploadStatus> uploadImage({
     required File imageFile,

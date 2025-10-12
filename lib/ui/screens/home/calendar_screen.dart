@@ -109,8 +109,7 @@ class _CalendarScreenState extends State<CalendarScreen> with AutomaticKeepAlive
                 return InkWell(
                   onTap: () {
                     if (temFoto) {
-                      final photosForDay = viewModel.photosByDate[dataAtual] ?? [];
-                      context.pushNamed(AppRoutes.dayDetails.name, extra: photosForDay);
+                      context.pushNamed(AppRoutes.dayDetails.name, extra: dataAtual);
                     }
                   },
                   child: Container(

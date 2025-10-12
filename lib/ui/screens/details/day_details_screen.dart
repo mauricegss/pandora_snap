@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pandora_snap/domain/models/photo_model.dart';
+import 'package:pandora_snap/ui/screens/home/calendar_viewmodel.dart';
 import 'package:pandora_snap/ui/widgets/photo_grid_widget.dart';
+import 'package:provider/provider.dart';
 
 class DayDetailsScreen extends StatelessWidget {
-  final List<Photo> photos;
+  final DateTime date;
 
-  const DayDetailsScreen({super.key, required this.photos});
+  const DayDetailsScreen({super.key, required this.date});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<CalendarViewModel>();
+    final photos = viewModel.photosByDate[date] ?? [];
+
     if (photos.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -20,7 +24,6 @@ class DayDetailsScreen extends StatelessWidget {
       );
     }
 
-    final date = photos.first.date;
     final formattedDate = DateFormat('dd/MM/yyyy', 'pt_BR').format(date);
 
     return Scaffold(
@@ -28,7 +31,6 @@ class DayDetailsScreen extends StatelessWidget {
         title: Text('Fotos de $formattedDate'),
         centerTitle: true,
       ),
-      
       body: PhotoGridView(photoList: photos),
     );
   }
