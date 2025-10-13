@@ -36,24 +36,29 @@ class CollectionViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final dogs = await _dogRepository.getDogs().first;
-    
-    final futureDogsWithPhotos = dogs.map((dog) async {
-      final photos = await _photoRepository.getPhotosForDog(dog.id, user);
-      final isCaptured = photos.isNotEmpty;
-      final coverPhotoUrl = isCaptured ? photos.first.url : 'assets/no_image.png';
+    try {
+      final dogs = await _dogRepository.getDogs().first;
       
-      return DogWithPhotos(
-        dog: dog,
-        photos: photos,
-        coverPhotoUrl: coverPhotoUrl,
-        isCaptured: isCaptured,
-      );
-    }).toList();
+      final futureDogsWithPhotos = dogs.map((dog) async {
+        final photos = await _photoRepository.getPhotosForDog(dog.id, user);
+        final isCaptured = photos.isNotEmpty;
+        final coverPhotoUrl = isCaptured ? photos.first.url : 'assets/no_image.png';
+        
+        return DogWithPhotos(
+          dog: dog,
+          photos: photos,
+          coverPhotoUrl: coverPhotoUrl,
+          isCaptured: isCaptured,
+        );
+      }).toList();
 
-    _dogsWithPhotos = await Future.wait(futureDogsWithPhotos);
-    
-    _isLoading = false;
-    notifyListeners();
+      _dogsWithPhotos = await Future.wait(futureDogsWithPhotos);
+    } catch (e) {
+      debugPrint('Erro ao carregar dados da coleção: $e');
+      _dogsWithPhotos = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

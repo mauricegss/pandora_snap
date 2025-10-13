@@ -144,18 +144,35 @@ class _PreviewScreenState extends State<PreviewScreen> {
                 child: StreamBuilder<List<Dog>>(
                     stream: context.read<DogRepository>().getDogs(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const Center(child: LinearProgressIndicator());
+                      
+                      Widget? suffixWidget;
+                      String labelText = 'Selecione um cão';
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        suffixWidget = const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.0)),
+                        );
+                      } else if (snapshot.hasError) {
+                        suffixWidget = const Icon(Icons.error, color: Colors.red);
+                        labelText = 'Erro ao carregar cães';
+                      }
+
                       return DropdownButtonFormField<Dog>(
                           decoration: InputDecoration(
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              labelText: 'Selecione um cão',
+                              labelText: labelText,
                               fillColor: Theme.of(context).scaffoldBackgroundColor,
-                              filled: true),
+                              filled: true,
+                              suffixIcon: suffixWidget,
+                          ),
+                          isExpanded: true,
                           initialValue: _selectedDog,
-                          onChanged: (Dog? newValue) => setState(() => _selectedDog = newValue),
-                          items: snapshot.data!.map((Dog dog) {
+                          onChanged: snapshot.hasData ? (Dog? newValue) => setState(() => _selectedDog = newValue) : null,
+                          items: snapshot.hasData ? snapshot.data!.map((Dog dog) {
                             return DropdownMenuItem<Dog>(value: dog, child: Text(dog.name));
-                          }).toList());
+                          }).toList() : [],
+                      );
                     }))),
       ]),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

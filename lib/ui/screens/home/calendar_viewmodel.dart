@@ -21,17 +21,20 @@ class CalendarViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _photoRepository.getDatesWithPhotos(user).listen((dates) async {
+    try {
+      final dates = await _photoRepository.getDatesWithPhotos(user).first;
       final Map<DateTime, List<Photo>> tempMap = {};
       for (final date in dates) {
         final photos = await _photoRepository.getPhotosForDate(date, user);
         tempMap[date] = photos;
       }
       _photosByDate = tempMap;
-      if (_isLoading) {
-        _isLoading = false;
-      }
+    } catch (e) {
+      debugPrint('Erro ao carregar dados do calendário: $e');
+      _photosByDate = {};
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
+    }
   }
 }
